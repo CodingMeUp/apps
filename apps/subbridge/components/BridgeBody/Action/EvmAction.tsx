@@ -1,11 +1,16 @@
-import {useEthersContract} from '@/hooks/useEthersContract'
+import {useEthersAssetContract} from '@/hooks/useEthersContract'
 import {useSwitchNetwork} from '@/hooks/useSwitchNetwork'
 import {ethersContractAllowanceFetcher} from '@/lib/ethersFetcher'
-import {assetAtom, bridgeErrorMessageAtom, fromChainAtom} from '@/store/bridge'
+import {
+  bridgeErrorMessageAtom,
+  bridgeInfoAtom,
+  decimalsAtom,
+  fromChainAtom,
+} from '@/store/bridge'
 import {evmAccountAtom, isNetworkWrongAtom} from '@/store/ethers'
 import {LoadingButton} from '@mui/lab'
 import {Button, Stack} from '@mui/material'
-import {useAtom} from 'jotai'
+import {useAtom, useAtomValue} from 'jotai'
 import {useSnackbar} from 'notistack'
 import {FC, useState} from 'react'
 import useSWR from 'swr'
@@ -14,19 +19,20 @@ const EvmAction: FC<{onConfirm: () => void}> = ({onConfirm}) => {
   const [approveLoading, setApproveLoading] = useState(false)
   const {enqueueSnackbar} = useSnackbar()
   const [fromChain] = useAtom(fromChainAtom)
-  const [asset] = useAtom(assetAtom)
-  const ethersAssetContract = useEthersContract('assetContract')
+  const ethersAssetContract = useEthersAssetContract()
   const [evmAccount] = useAtom(evmAccountAtom)
   const [isNetworkWrong] = useAtom(isNetworkWrongAtom)
   const [bridgeErrorMessage] = useAtom(bridgeErrorMessageAtom)
+  const {kind: bridgeKind} = useAtomValue(bridgeInfoAtom)
   const switchNetwork = useSwitchNetwork()
-  const decimals = asset.decimals[fromChain.id] || asset.decimals.default
+  const decimals = useAtomValue(decimalsAtom)
+  const needApproval = bridgeKind === 'evmChainBridge'
   const spender =
     fromChain.kind === 'evm'
-      ? asset.assetContract?.[fromChain.evmChainId].spender
+      ? fromChain.chainBridgeContract?.spender
       : undefined
   const {data: approved} = useSWR(
-    ethersAssetContract && evmAccount && spender
+    needApproval && ethersAssetContract && evmAccount && spender
       ? [ethersAssetContract, evmAccount, spender]
       : null,
     ethersContractAllowanceFetcher,
@@ -73,25 +79,32 @@ const EvmAction: FC<{onConfirm: () => void}> = ({onConfirm}) => {
         mx: 'auto',
       }}
     >
-      <LoadingButton
-        loading={(!approved && approveLoading) || approved === undefined}
-        size="large"
-        sx={{flex: 1}}
-        disabled={
-          approved === undefined || approved || !ethersAssetContract || !spender
-        }
-        onClick={handleApprove}
-      >
-        {approved ? 'Approved' : 'Approve'}
-      </LoadingButton>
+      {needApproval && (
+        <LoadingButton
+          loading={(!approved && approveLoading) || approved === undefined}
+          size="large"
+          sx={{flex: 1}}
+          disabled={
+            approved === undefined ||
+            approved ||
+            !ethersAssetContract ||
+            !spender
+          }
+          onClick={handleApprove}
+        >
+          {approved ? 'Approved' : 'Approve'}
+        </LoadingButton>
+      )}
       <Button
         size="large"
         sx={{flex: 1}}
         variant="contained"
-        disabled={!approved || Boolean(bridgeErrorMessage)}
+        disabled={(!approved && needApproval) || Boolean(bridgeErrorMessage)}
         onClick={onConfirm}
       >
-        {approved && bridgeErrorMessage ? bridgeErrorMessage : 'Transfer'}
+        {(approved || !needApproval) && bridgeErrorMessage
+          ? bridgeErrorMessage
+          : 'Transfer'}
       </Button>
     </Stack>
   )

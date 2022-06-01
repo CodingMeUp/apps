@@ -1,7 +1,10 @@
+import {ChainId} from '@/config/chain'
 import {ApiPromise} from '@polkadot/api'
+import {hexStripPrefix, u8aToHex} from '@polkadot/util'
+import {decodeAddress} from '@polkadot/util-crypto'
 import Decimal from 'decimal.js'
 import type {BigNumber, ethers} from 'ethers'
-import {createEthereumToKhalaData} from './createEthereumToKhalaData'
+import {createChainBridgeData} from './transferByChainBridge'
 
 export const ethersBalanceFetcher = async (
   provider: ethers.providers.Web3Provider,
@@ -41,20 +44,49 @@ export const ethersGasPriceFetcher = async (
   return new Decimal(ethers.utils.formatEther(await provider.getGasPrice()))
 }
 
-export const ethereumToKhalaEstimatedGasFetcher = async (
+const ALICE = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
+
+export const evmChainBridgeEstimatedGasFetcher = async (
   contract: ethers.Contract,
   khalaApi: ApiPromise,
-  resourceId: string
+  resourceId: string,
+  toChainId: ChainId
 ): Promise<Decimal> => {
   const estimateGas = await contract.estimateGas.deposit(
     1,
     resourceId,
-    await createEthereumToKhalaData(
+    await createChainBridgeData(
       khalaApi,
       // Try to use fixed amount to reduce requests
-      '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-      '1'
+      ALICE,
+      '1',
+      toChainId
     )
+  )
+
+  return new Decimal(estimateGas.toString())
+}
+
+export const evmXTokensEstimatedGasFetcher = async (
+  contract: ethers.Contract,
+  xc20Address: `0x${string}`,
+  paraId: number,
+  decimals: number
+): Promise<Decimal> => {
+  const {ethers} = await import('ethers')
+  const estimateGas = await contract.estimateGas.transfer(
+    xc20Address,
+    '1',
+    {
+      parents: 1,
+      interior: [
+        ethers.utils.hexZeroPad(ethers.utils.hexlify(paraId), 5),
+        `0x01${hexStripPrefix(u8aToHex(decodeAddress(ALICE)))}00`, // AccountKey32 Selector + Address in hex + Network = Any
+      ],
+    },
+    Decimal.pow(10, decimals - 3)
+      .times(6)
+      .toString()
   )
 
   return new Decimal(estimateGas.toString())

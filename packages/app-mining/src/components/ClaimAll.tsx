@@ -74,7 +74,11 @@ const ClaimAll = (
         ],
       },
     },
-    {enabled: Boolean(polkadotAccount?.address), refetchOnMount: true}
+    {
+      enabled: Boolean(polkadotAccount?.address),
+      refetchOnMount: true,
+      refetchInterval: 60 * 10 * 1000,
+    }
   )
 
   const closeModal = useCallback(() => {
@@ -82,7 +86,7 @@ const ClaimAll = (
     setConfirmLock(false)
   }, [])
 
-  const totalclaimableReward = useMemo<Decimal | null>(() => {
+  const totalClaimableReward = useMemo<Decimal | null>(() => {
     if (!data) return null
 
     return data.findManyStakePools.reduce((acc, cur) => {
@@ -137,15 +141,15 @@ const ClaimAll = (
   }, [address, api, claimableStakePoolPids, decimals])
   return (
     <>
-      <Block display="flex" alignItems="center" {...props}>
+      <Block display="flex" alignItems="center" flexWrap {...props}>
         {polkadotAccount?.address && (
           <Block marginRight="20px">
             <LabelSmall as="div">{'Claimable Rewards'}</LabelSmall>
             <HeadingSmall as="div">
-              {isLoading || !totalclaimableReward ? (
+              {isLoading || !totalClaimableReward ? (
                 <Skeleton animation height="32px" width="200px" />
               ) : (
-                `${formatCurrency(totalclaimableReward)} PHA`
+                `${formatCurrency(totalClaimableReward)} PHA`
               )}
             </HeadingSmall>
           </Block>
@@ -154,7 +158,7 @@ const ClaimAll = (
         <Button
           onClick={() => setIsModalOpen(true)}
           kind="secondary"
-          disabled={!totalclaimableReward || totalclaimableReward.eq(0)}
+          disabled={!totalClaimableReward || totalClaimableReward.eq(0)}
         >
           Claim All
         </Button>
@@ -188,7 +192,7 @@ const ClaimAll = (
           <FormControl label={'Rewards'}>
             <Block display={'flex'} flexDirection={'row'}>
               <ParagraphSmall as="div">
-                {totalclaimableReward && formatCurrency(totalclaimableReward)}{' '}
+                {totalClaimableReward && formatCurrency(totalClaimableReward)}{' '}
                 PHA
               </ParagraphSmall>
             </Block>

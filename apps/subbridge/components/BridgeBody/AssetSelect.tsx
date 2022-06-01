@@ -1,4 +1,5 @@
 import {AssetId, ASSETS} from '@/config/asset'
+import {assetAtom} from '@/store/bridge'
 import {
   Box,
   MenuItem,
@@ -6,15 +7,29 @@ import {
   TextFieldProps,
   Typography,
 } from '@mui/material'
-import {FC} from 'react'
+import {useAtom} from 'jotai'
+import {FC, useEffect} from 'react'
 
-const AssetSelect: FC<
-  {
-    assetIds: AssetId[]
-  } & TextFieldProps
-> = ({assetIds, ...props}) => {
+const AssetSelect: FC<TextFieldProps & {assetIds: AssetId[]}> = ({
+  assetIds,
+  ...props
+}) => {
+  const [asset, setAsset] = useAtom(assetAtom)
+  useEffect(() => {
+    // Preload asset icons
+    assetIds.forEach((assetId) => {
+      const {icon} = ASSETS[assetId]
+      const image = new Image()
+      image.src = icon.src
+    })
+  }, [assetIds])
+
   return (
     <TextField
+      value={asset.id}
+      onChange={(e) => {
+        setAsset(e.target.value as AssetId)
+      }}
       select
       variant="standard"
       InputProps={{

@@ -1,7 +1,12 @@
 import {useBridgeFee} from '@/hooks/useBridgeFee'
 import {useEstimatedGasFee} from '@/hooks/useEstimatedGasFee'
 import {useCurrentPolkadotApi} from '@/hooks/usePolkadotApi'
-import {assetAtom, bridgeAtom, fromChainAtom} from '@/store/bridge'
+import {
+  assetAtom,
+  bridgeInfoAtom,
+  destChainTransactionFeeAtom,
+  fromChainAtom,
+} from '@/store/bridge'
 import {
   Box,
   BoxProps,
@@ -68,14 +73,13 @@ const Info: FC<
 
 const ExtraInfo: FC<PaperProps> = ({sx, ...props}) => {
   const theme = useTheme()
-  const bridge = useAtomValue(bridgeAtom)
   const fromChain = useAtomValue(fromChainAtom)
   const polkadotApi = useCurrentPolkadotApi()
   const estimatedGas = useEstimatedGasFee()
   const bridgeFee = useBridgeFee()
   const asset = useAtomValue(assetAtom)
-
-  if (!bridge) return null
+  const destChainTransactionFee = useAtomValue(destChainTransactionFeeAtom)
+  const {estimatedTime} = useAtomValue(bridgeInfoAtom)
 
   return (
     <Paper
@@ -105,16 +109,12 @@ const ExtraInfo: FC<PaperProps> = ({sx, ...props}) => {
           label="Destination Chain Fee"
           tooltip=" This fee is used to pay the XCM fee of the destination chain."
         >
-          {`${
-            bridge.destChainTransactionFee
-              ? formatCurrency(bridge.destChainTransactionFee, 8)
-              : '0'
-          } ${asset.symbol}`}
+          {`${formatCurrency(destChainTransactionFee, 12)} ${asset.symbol}`}
         </Info>
 
         <Divider />
 
-        <Info label="Estimated time">{bridge.estimatedTime}</Info>
+        <Info label="Estimated time">{estimatedTime}</Info>
 
         <Info label="Estimated gas fee">
           {estimatedGas ? (

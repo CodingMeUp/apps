@@ -4,7 +4,7 @@ export const tooltipContent = {
   pid: `StakePool's ID`,
   owner: `StakePool's Owner Account. “Unknown” means the account has identity but has not been judged. “Verified” means the registrar has certified that the information is correct.`,
   apr: 'Real-time Annual Percentage Rate',
-  remaining: 'The remaining allocation you can delegate to the Pool',
+  delegable: 'The amount you can delegate to the Pool',
   commission:
     'The commission rate of the mining reward taken by the Pool owner. (0% means no pool owner reward, and all the reward goes to the delegators)',
   delegated: 'Total delegated stake in the StakePool',
@@ -20,7 +20,7 @@ export const tooltipContent = {
       cooling down period.{' '}
       <StyledLink
         target="_blank"
-        rel="noopener noreferrer"
+        rel="noreferrer"
         href="https://forum.phala.network/t/topic/3073"
         $style={{color: 'inherit', ':visited': {color: 'inherit'}}}
       >
@@ -29,4 +29,6 @@ export const tooltipContent = {
     </>
   ),
   claimableReward: 'Rewards that are collectable',
+  commissionWarning:
+    'This StakePool has lowered its commission in the past 3 days, and there is a risk of callback in the future, resulting in lower returns than the current APR. You can click to enter the details page to view the commission chart.',
 }

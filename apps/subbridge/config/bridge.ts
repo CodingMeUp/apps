@@ -1,81 +1,139 @@
-import Decimal from 'decimal.js'
 import {AssetId} from './asset'
 import {ChainId} from './chain'
 
+export type BridgeKind =
+  | 'evmChainBridge'
+  | 'evmXTokens'
+  | 'polkadotXTokens'
+  | 'khalaXTransfer'
+
+type AssetsConfig = {
+  assetId: AssetId
+  estimatedTime: string
+  kind: BridgeKind
+}[]
+
 export interface Bridge {
   fromChain: ChainId
-  toChain: ChainId
-  asset: AssetId
-  estimatedTime: string
-  destChainTransactionFee?: Decimal
-  existentialDeposit?: Decimal
+  toChains: {
+    id: ChainId
+    assets: AssetsConfig
+  }[]
 }
+
+const ethereumToKhalaAssets: AssetsConfig = [
+  {assetId: 'pha', estimatedTime: '< 1 min', kind: 'evmChainBridge'},
+]
+
+const khalaToEthereumAssets: AssetsConfig = [
+  {assetId: 'pha', estimatedTime: '~ 10 mins', kind: 'khalaXTransfer'},
+]
+
+const khalaToKaruraAssets: AssetsConfig = [
+  {assetId: 'pha', estimatedTime: '< 1 min', kind: 'khalaXTransfer'},
+  {assetId: 'kar', estimatedTime: '< 1 min', kind: 'khalaXTransfer'},
+]
+
+const karuraToKhalaAssets: AssetsConfig = [
+  {assetId: 'pha', estimatedTime: '< 1 min', kind: 'polkadotXTokens'},
+  {assetId: 'kar', estimatedTime: '< 1 min', kind: 'polkadotXTokens'},
+]
+
+const khalaToMoonriverAssets: AssetsConfig = [
+  {assetId: 'pha', estimatedTime: '< 1 min', kind: 'khalaXTransfer'},
+  {assetId: 'movr', estimatedTime: '< 1 min', kind: 'khalaXTransfer'},
+  // {assetId: 'zlk', estimatedTime: '< 1 min', kind: 'khalaXTransfer'},
+]
+
+const moonriverToKhalaAssets: AssetsConfig = [
+  {assetId: 'pha', estimatedTime: '< 1 min', kind: 'evmXTokens'},
+  {assetId: 'movr', estimatedTime: '< 1 min', kind: 'evmXTokens'},
+  // {assetId: 'zlk', estimatedTime: '< 3 mins', kind: 'evmChainBridge'},
+]
+
+const khalaToBifrostAssets: AssetsConfig = [
+  {assetId: 'pha', estimatedTime: '< 1 min', kind: 'khalaXTransfer'},
+  {assetId: 'bnc', estimatedTime: '< 1 min', kind: 'khalaXTransfer'},
+]
+
+const bifrostToKhalaAssets: AssetsConfig = [
+  {assetId: 'pha', estimatedTime: '< 1 min', kind: 'polkadotXTokens'},
+  {assetId: 'bnc', estimatedTime: '< 1 min', kind: 'polkadotXTokens'},
+]
+
+const moonriverToBifrostAssets: AssetsConfig = [
+  // {assetId: 'zlk', estimatedTime: '< 1 min', kind: 'evmChainBridge'},
+]
+
+const bifrostToMoonriverAssets: AssetsConfig = [
+  // {assetId: 'zlk', estimatedTime: '< 1 min', kind: 'polkadotXTokens'},
+]
 
 export const BRIDGES: Readonly<Bridge[]> = [
   {
     fromChain: 'ethereum',
-    toChain: 'khala',
-    asset: 'pha',
-    estimatedTime: '< 1 min',
-    destChainTransactionFee: new Decimal(0),
-    existentialDeposit: new Decimal(0.01),
-  },
-  {
-    fromChain: 'khala',
-    toChain: 'ethereum',
-    asset: 'pha',
-    estimatedTime: '> 24 hrs',
-    destChainTransactionFee: new Decimal(0),
+    toChains: [{id: 'khala', assets: ethereumToKhalaAssets}],
   },
   {
     fromChain: 'kovan',
-    toChain: 'thala',
-    asset: 'pha',
-    estimatedTime: '< 1 min',
-    destChainTransactionFee: new Decimal(0),
-    existentialDeposit: new Decimal(0.01),
-  },
-  {
-    fromChain: 'thala',
-    toChain: 'kovan',
-    asset: 'pha',
-    estimatedTime: '> 24 hrs',
-    destChainTransactionFee: new Decimal(0),
-  },
-  {
-    fromChain: 'karura',
-    toChain: 'khala',
-    asset: 'pha',
-    estimatedTime: '< 1 min',
-    destChainTransactionFee: new Decimal(0.064),
-    existentialDeposit: new Decimal(0.01),
+    toChains: [{id: 'thala', assets: ethereumToKhalaAssets}],
   },
   {
     fromChain: 'khala',
-    toChain: 'karura',
-    asset: 'pha',
-    estimatedTime: '< 1 min',
-    destChainTransactionFee: new Decimal(0.0512),
-    existentialDeposit: new Decimal(0.04),
-  },
-  {
-    fromChain: 'karura-test',
-    toChain: 'thala',
-    asset: 'pha',
-    estimatedTime: '< 1 min',
-    destChainTransactionFee: new Decimal(0.064),
-    existentialDeposit: new Decimal(0.01),
+    toChains: [
+      {id: 'ethereum', assets: khalaToEthereumAssets},
+      {id: 'karura', assets: khalaToKaruraAssets},
+      {id: 'moonriver', assets: khalaToMoonriverAssets},
+      {id: 'bifrost', assets: khalaToBifrostAssets},
+    ],
   },
   {
     fromChain: 'thala',
-    toChain: 'karura-test',
-    asset: 'pha',
-    estimatedTime: '< 1 min',
-    destChainTransactionFee: new Decimal(0.0512),
-    existentialDeposit: new Decimal(0.04),
+    toChains: [
+      {id: 'kovan', assets: khalaToEthereumAssets},
+      {id: 'karura-test', assets: khalaToKaruraAssets},
+      {id: 'moonbase-alpha', assets: khalaToMoonriverAssets},
+      {id: 'bifrost-test', assets: khalaToBifrostAssets},
+    ],
+  },
+  {
+    fromChain: 'karura',
+    toChains: [{id: 'khala', assets: karuraToKhalaAssets}],
+  },
+  {
+    fromChain: 'karura-test',
+    toChains: [{id: 'thala', assets: karuraToKhalaAssets}],
+  },
+  {
+    fromChain: 'moonriver',
+    toChains: [
+      {id: 'khala', assets: moonriverToKhalaAssets},
+      {id: 'bifrost', assets: moonriverToBifrostAssets},
+    ],
+  },
+  {
+    fromChain: 'moonbase-alpha',
+    toChains: [
+      {id: 'thala', assets: moonriverToKhalaAssets},
+      {id: 'bifrost-test', assets: moonriverToBifrostAssets},
+    ],
+  },
+  {
+    fromChain: 'bifrost',
+    toChains: [
+      {id: 'khala', assets: bifrostToKhalaAssets},
+      {id: 'moonriver', assets: bifrostToMoonriverAssets},
+    ],
+  },
+  {
+    fromChain: 'bifrost-test',
+    toChains: [
+      {id: 'thala', assets: bifrostToKhalaAssets},
+      {id: 'moonbase-alpha', assets: bifrostToMoonriverAssets},
+    ],
   },
 ]
 
-export const ALL_FROM_CHAINS = [
-  ...new Set(BRIDGES.map((bridge) => bridge.fromChain)),
-]
+export const ALL_FROM_CHAINS = BRIDGES.filter((bridge) =>
+  bridge.toChains.some((x) => x.assets.length > 0)
+).map((bridge) => bridge.fromChain)
